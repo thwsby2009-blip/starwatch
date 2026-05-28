@@ -178,7 +178,6 @@ def make_taiwan_map(lat, lng):
     fig.update_geo(
         projection_type="mercator",
         center=dict(lat=lat, lon=lng),
-        projection_scale=80,
         bgcolor="#0a0a1a",
         landcolor="#1a1a2e",
         oceancolor="#0a0a1a",
@@ -187,8 +186,6 @@ def make_taiwan_map(lat, lng):
         showcountries=False,
         showcoastlines=False,
         showlakes=False,
-        framecolor="rgba(255,255,255,0.15)",
-        framewidth=1,
     )
 
     fig.update_layout(
