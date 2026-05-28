@@ -156,11 +156,15 @@ def make_taiwan_map(lat, lng):
         hovertemplate=f"<b>📍 你的位置</b><br>緯度: {lat:.4f}°<br>經度: {lng:.4f}°<extra></extra>",
     ))
 
-    # 方向箭頭（從你的位置往外指）
-    arrow_colors = {"北": "#FF4444", "東": "#44FF44", "南": "#4444FF", "西": "#FFFF44"}
-    for direction, angle, color in [("北", 0, "#FF4444"), ("東", 90, "#44FF44"), ("南", 180, "#4444FF"), ("西", 270, "#FFFF44")]:
-        # 從中心往外畫箭頭
-        offset = 0.5
+    # 方向箭頭（用 Scatter 而不是 Scattergeo 疊加）
+    arrow_data = {
+        "北": (0, "#FF4444"),
+        "東": (90, "#44FF44"),
+        "南": (180, "#4444FF"),
+        "西": (270, "#FFFF44"),
+    }
+    for direction, (angle, color) in arrow_data.items():
+        offset = 0.3
         end_lat = lat + offset * math.cos(math.radians(angle))
         end_lng = lng + offset * math.sin(math.radians(angle))
         fig.add_trace(go.Scattergeo(
@@ -169,7 +173,6 @@ def make_taiwan_map(lat, lng):
             mode="lines",
             line=dict(color=color, width=3),
             name=direction,
-            show_legend=True,
         ))
 
     fig.update_geo(
