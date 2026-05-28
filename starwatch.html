@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>今晚的星星 ✨</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a1a;
+      color: #e0e0f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #f0d080;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #8888aa;
+      margin-bottom: 20px;
+    }
+
+    .location-bar {
+      background: #151530;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .location-bar .icon { font-size: 1.2rem; }
+    .location-bar .info { flex: 1; }
+    .location-bar .loc-name { color: #c0c0e0; font-weight: 600; }
+    .location-bar .loc-detail { color: #6666aa; font-size: 0.8rem; margin-top: 2px; }
+
+    .time-bar {
+      background: #151530;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .time-bar .icon { font-size: 1.2rem; }
+    .time-bar .info { flex: 1; }
+    .time-bar .time-text { color: #c0c0e0; font-weight: 600; }
+    .time-bar .date-text { color: #6666aa; font-size: 0.8rem; margin-top: 2px; }
+
+    .section-title {
+      font-size: 1rem;
+      color: #f0d080;
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+
+    .constellation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: #12122a;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid #1e1e3a;
+    }
+
+    .card .emoji {
+      font-size: 2rem;
+      width: 48px;
+      text-align: center;
+    }
+
+    .card .content { flex: 1; }
+    .card .name { font-size: 1.1rem; font-weight: 600; color: #d0d0f0; }
+    .card .sub { font-size: 0.8rem; color: #6666aa; margin-top: 2px; }
+    .card .status {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .status.up {
+      background: #1a3a2a;
+      color: #60dd80;
+    }
+
+    .status.down {
+      background: #2a1a2a;
+      color: #aa6688;
+    }
+
+    .status.rising {
+      background: #2a2a1a;
+      color: #ddaa40;
+    }
+
+    .status.setting {
+      background: #1a2a2a;
+      color: #40bbdd;
+    }
+
+    .tip {
+      margin-top: 28px;
+      background: #101028;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.82rem;
+      color: #8888bb;
+      line-height: 1.6;
+    }
+
+    .tip strong { color: #aaaacc; }
+
+    .refresh-btn {
+      display: block;
+      width: 100%;
+      background: #1e1e40;
+      color: #9090d0;
+      border: 1px solid #2a2a50;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .refresh-btn:active { background: #252550; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6666aa;
+    }
+
+    .error-msg {
+      background: #2a1010;
+      border: 1px solid #4a2020;
+      border-radius: 12px;
+      padding: 16px;
+      color: #dd8888;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>✨ 今晚的星星</h1>
+  <div class="subtitle">抬頭看看天上有哪些星座～</div>
+
+  <div id="app">
+    <div class="loading">📡 定位中...</div>
+  </div>
+
+<script>
+// ===== 星座資料（黃道/常見星座） =====
+const CONSTELLATIONS = [
+  {
+    name: "獵戶座", emoji: "🏹",
+    ra: 5.5, dec: 0, // 時角 (小時) + 赤緯 (度)
+    desc: "冬天最亮的星座，三顆腰帶星很好認",
+    bestMonths: "12月 - 2月"
+  },
+  {
+    name: "大熊座", emoji: "🐻",
+    ra: 11, dec: 55,
+    desc: "北斗七星是它的一部分",
+    bestMonths: "全年可見"
+  },
+  {
+    name: "仙后座", emoji: "👸",
+    ra: 1, dec: 60,
+    desc: "W 形狀很好認，可以幫忙找北",
+    bestMonths: "10月 - 3月"
+  },
+  {
+    name: "天蠍座", emoji: "🦂",
+    ra: 16.5, dec: -30,
+    desc: "鉤子形尾巴，夏季代表星座",
+    bestMonths: "6月 - 8月"
+  },
+  {
+    name: "獅子座", emoji: "🦁",
+    ra: 10.5, dec: 15,
+    desc: "鉤刀形狀，春天最容易看到",
+    bestMonths: "3月 - 5月"
+  },
+  {
+    name: "織女星（天琴座）", emoji: "🎵",
+    ra: 18.4, dec: 38,
+    desc: "夏季大三角之一，很亮",
+    bestMonths: "6月 - 9月"
+  },
+  {
+    name: "牛郎星（天鷹座）", emoji: "🦅",
+    ra: 19.8, dec: 8,
+    desc: "夏季大三角之一，隔著銀河看織女",
+    bestMonths: "6月 - 9月"
+  },
+  {
+    name: "天津四（天鵝座）", emoji: "🦢",
+    ra: 20.6, dec: 45,
+    desc: "夏季大三角之一，十字形翅膀",
+    bestMonths: "6月 - 9月"
+  },
+  {
+    name: "南魚座", emoji: "🐟",
+    ra: 22.3, dec: -30,
+    desc: "秋季代表，亮的北落師門",
+    bestMonths: "9月 - 11月"
+  },
+  {
+    name: "飛馬座", emoji: "🐎",
+    ra: 22.7, dec: 20,
+    desc: "秋季四角形，很好認",
+    bestMonths: "10月 - 12月"
+  },
+  {
+    name: "英仙座", emoji: "⚔️",
+    ra: 3, dec: 45,
+    desc: "雙星團、著名的流星雨源",
+    bestMonths: "11月 - 1月"
+  },
+  {
+    name: "金星", emoji: "🌟",
+    isPlanet: true, planet: "Venus",
+    ra: null, dec: null,
+    desc: "天上最亮的行星，日落後在西邊或日出前在東邊",
+    bestMonths: "不定"
+  },
+  {
+    name: "火星", emoji: "🔴",
+    isPlanet: true, planet: "Mars",
+    ra: null, dec: null,
+    desc: "紅色行星，很好認",
+    bestMonths: "不定"
+  },
+  {
+    name: "木星", emoji: "🟡",
+    isPlanet: true, planet: "Jupiter",
+    ra: null, dec: null,
+    desc: "非常亮，有時候比金星還亮",
+    bestMonths: "不定"
+  },
+];
+
+// ===== 取得GPS位置 =====
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject("你的瀏覽器不支援定位功能");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(pos.coords),
+      (err) => reject("定位失敗，請允許位置存取"),
+      { timeout: 10000 }
+    );
+  });
+}
+
+// ===== 近似計算星座可見性 =====
+// 簡化版：用日期估算平均時角，加上觀測者緯度來估算地平高度
+function estimateVisibility(constellation, lat, month, hour) {
+  // 近似：一天24小時，相當於天球旋轉360度
+  // 以3月春分為基準（RA=0的星在午夜過中天）
+  const dayOfYear = Math.floor((month - 1) * 30.4) + 15;
+  // 春分大約是第80天
+  const daysFromSpring = dayOfYear - 80;
+  // 每月天球向東轉約 2 小時
+  const seasonalShift = (daysFromSpring / 365) * 24;
+
+  // 當地恆星時（簡化）
+  let lst = hour + seasonalShift;
+
+  // 高度角估算：根據赤緯和當地緯度
+  // 過中天高度 = 90 - |φ - δ|
+  // 北方（dec > 0）: 只要正高度 > 0 就能看到
+  // 南方（dec < 0）: 視月份決定可見性
+
+  const dec = constellation.dec || 0;
+  const altitude = 90 - Math.abs(lat - dec);
+
+  // 月份判斷（南半球星座冬季看不見等簡化規則）
+  const isNorthern = dec >= 0;
+  const isSouthern = !isNorthern;
+
+  // 簡化可見性規則
+  // 北半球：夏季看南方星座困難，冬季看北方星座困難
+  let monthFactor = 0;
+  if (isNorthern) {
+    // 冬季（12-2月）北天星座高掛
+    if (month >= 11 || month <= 2) monthFactor = 1;
+    else if (month >= 3 && month <= 5) monthFactor = 0.7;
+    else monthFactor = 0.4;
+  } else {
+    // 南天星座冬季（12-2月）比較好
+    if (month >= 11 || month <= 2) monthFactor = 0.8;
+    else monthFactor = 0.3;
+  }
+
+  // 只有高度 > 0 且月份合適才可見
+  if (altitude < 5) return { status: "down", alt: Math.round(altitude) };
+  if (altitude > 20 && monthFactor > 0.5) return { status: "up", alt: Math.round(altitude) };
+  if (altitude > 10 && monthFactor > 0.3) return { status: "rising", alt: Math.round(altitude) };
+  if (altitude > 0) return { status: "setting", alt: Math.round(altitude) };
+  return { status: "down", alt: Math.round(altitude) };
+}
+
+// ===== 行星位置（非常簡化估算）=====
+const PLANETS = {
+  Venus: {
+    cycle: 225, phase: 0.4, // 簡化
+    getRA: (month, day) => {
+      const base = (month - 1) * 30 + day;
+      return ((base * 24 / 225) % 24);
+    }
+  },
+  Mars: {
+    cycle: 687, phase: 0.6,
+    getRA: (month, day) => {
+      const base = (month - 1) * 30 + day;
+      return ((base * 24 / 687) % 24);
+    }
+  },
+  Jupiter: {
+    cycle: 433, phase: 0.1,
+    getRA: (month, day) => {
+      const base = (month - 1) * 30 + day;
+      return ((base * 24 / 433) % 24);
+    }
+  }
+};
+
+function getPlanetVisibility(planetKey, lat, month, hour) {
+  const p = PLANETS[planetKey];
+  const ra = p.getRA(month, 15);
+  // 行星一般在黃道附近，所以用赤緯 ~0 估算
+  const altitude = 90 - Math.abs(lat - 0);
+  // 行星只在夜間可見（假設太陽在 RA=0）
+  // 這超級簡化，只是展示用
+  const sunRA = (month * 2 + 6) % 24; // 粗估太陽位置
+  const diff = Math.abs(ra - sunRA);
+  const angularDist = Math.min(diff, 24 - diff);
+
+  if (angularDist < 3) return { status: "down", alt: Math.round(altitude) };
+  if (angularDist < 6) return { status: "setting", alt: Math.round(altitude) };
+  if (altitude > 10) return { status: "up", alt: Math.round(altitude) };
+  return { status: "rising", alt: Math.round(altitude) };
+}
+
+// ===== 主程式 =====
+async function main() {
+  const app = document.getElementById("app");
+
+  try {
+    const coords = await getLocation();
+    const lat = coords.latitude;
+    const lng = coords.longitude;
+
+    // 現在時間
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const hour = now.getHours() + now.getMinutes() / 60;
+    const dateStr = now.toLocaleDateString("zh-TW", {
+      year: "numeric", month: "long", day: "numeric", weekday: "long"
+    });
+    const timeStr = now.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+
+    // 地點
+    const locationName = lat.toFixed(2) + "°N, " + lng.toFixed(2) + "°E";
+
+    // 建立可見的星座列表
+    const visible = [];
+    const hidden = [];
+
+    for (const c of CONSTELLATIONS) {
+      let vis;
+      if (c.isPlanet) {
+        vis = getPlanetVisibility(c.planet, lat, month, hour);
+      } else {
+        vis = estimateVisibility(c, lat, month, hour);
+      }
+      const item = { ...c, ...vis };
+      if (vis.status === "up" || vis.status === "rising") {
+        visible.push(item);
+      } else {
+        hidden.push(item);
+      }
+    }
+
+    // 排序：最亮的在前面
+    visible.sort((a, b) => b.alt - a.alt);
+    hidden.sort((a, b) => b.alt - a.alt);
+
+    const statusLabel = {
+      up: "可見 ⬆",
+      rising: "正在升起",
+      setting: "即將落下",
+      down: "低於地平線"
+    };
+
+    let html = `
+      <div class="location-bar">
+        <span class="icon">📍</span>
+        <div class="info">
+          <div class="loc-name">${locationName}</div>
+          <div class="loc-detail">緯度 ${lat.toFixed(4)}° / 經度 ${lng.toFixed(4)}°</div>
+        </div>
+      </div>
+
+      <div class="time-bar">
+        <span class="icon">🕐</span>
+        <div class="info">
+          <div class="time-text">${timeStr}</div>
+          <div class="date-text">${dateStr}</div>
+        </div>
+      </div>
+    `;
+
+    if (visible.length > 0) {
+      html += `<div class="section-title">🌟 現在可以看到</div>
+      <div class="constellation-list">`;
+      for (const c of visible) {
+        html += `
+        <div class="card">
+          <div class="emoji">${c.emoji}</div>
+          <div class="content">
+            <div class="name">${c.name}</div>
+            <div class="sub">${c.desc}</div>
+          </div>
+          <div class="status ${c.status}">${statusLabel[c.status]} ${c.alt}°</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (hidden.length > 0) {
+      html += `<div class="section-title" style="margin-top:24px">🌙 看不見但存在的</div>
+      <div class="constellation-list">`;
+      for (const c of hidden) {
+        html += `
+        <div class="card">
+          <div class="emoji">${c.emoji}</div>
+          <div class="content">
+            <div class="name">${c.name}</div>
+            <div class="sub">${c.bestMonths}</div>
+          </div>
+          <div class="status down">已落下</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    html += `
+    <div class="tip">
+      <strong>💡 小提示：</strong>用手機觀星時，<strong>先把螢幕亮度調低</strong>，<br>
+      並開啟<strong>夜間模式</strong>（紅色濾鏡更好），<br>
+      眼睛約需 <strong>15-20 分鐘</strong> 適應黑暗，就能看到更多星星囉！
+    </div>
+    <button class="refresh-btn" onclick="location.reload()">🔄 重新整理</button>`;
+
+    app.innerHTML = html;
+
+  } catch (err) {
+    app.innerHTML = `
+      <div class="error-msg">
+        ⚠️ ${err}<br><br>
+        <small>請允許瀏覽器讀取位置，或檢查網路連線～</small>
+      </div>`;
+  }
+}
+
+main();
+</script>
+</body>
+</html>
