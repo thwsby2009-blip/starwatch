@@ -151,7 +151,7 @@ def make_taiwan_map(lat, lng):
         lat=[lat],
         lon=[lng],
         mode="markers",
-        marker=dict(size=18, color="#FFD700", symbol="star", line=dict(color="#FF6B00", width=2)),
+        marker=dict(size=16, color="#FFD700", line=dict(color="#FF6B00", width=2)),
         name="你的位置",
         hovertemplate=f"<b>📍 你的位置</b><br>緯度: {lat:.4f}°<br>經度: {lng:.4f}°<extra></extra>",
     ))
